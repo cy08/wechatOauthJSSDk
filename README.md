@@ -19,6 +19,7 @@ let express = require('express'),
     app.use(express.static('www'));
     
 wechatOauthJSSDk = new wechatOauthJSSDk(wxConfig);
+
 let wxConfig = {
       host: "http://xxxx.com",
       appid: "公众号APPID",
@@ -28,11 +29,11 @@ let wxConfig = {
 }
 
 app.get('/oauth', wechatOauthJSSDk.oauth.bind(wechatOauthJSSDk));//获取授权信息
+
 //接收授权信息
 wechatOauthJSSDk.oauthData=function(data, res) {
 	console.log(data);
 }
-
 
 app.post('/wxConfigSDK', wechatOauthJSSDk.JSSDK.bind(wechatOauthJSSDk));//获取JSSDK
 
