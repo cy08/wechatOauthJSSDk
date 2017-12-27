@@ -7,7 +7,9 @@ let sha1 = (str) => {
     str = md5sum.digest('hex');
     return str;
 }
+
 function wechatOauthJSSDk(opts) {
+    this.protocol = opts.protocol || "http";
     this.host = opts.host;
     this.appid = opts.appid;
     this.appsecret = opts.appsecret;
@@ -17,10 +19,10 @@ function wechatOauthJSSDk(opts) {
 
 }
 
-wechatOauthJSSDk.prototype.oauth = function(req, res) {
+wechatOauthJSSDk.prototype.oauth = (req, res)=>{
     if (!req.query.code) {
         if (!req.query.url) res.send("请填写回调域名");
-        let return_uri = encodeURIComponent(this.host + "/oauth?url=" + req.query.url); // 这是回调URL
+        let return_uri = encodeURIComponent(this.protocol + "://" + this.host + "/oauth?url=" + req.query.url); // 这是回调URL
         let scope = 'snsapi_userinfo'; //snsapi_base 无需用户确认获取用户信息
         res.redirect('https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + this.appid + '&redirect_uri=' + return_uri + '&response_type=code&scope=' + scope + '&state=STATE#wechat_redirect');
     } else {
@@ -28,8 +30,8 @@ wechatOauthJSSDk.prototype.oauth = function(req, res) {
         this.verifiCation(req, res);
     }
 }
-
-wechatOauthJSSDk.prototype.verifiCation = function(req, res) {
+// 验证接口
+wechatOauthJSSDk.prototype.verifiCation = (req, res)=>{
     let code = req.query.code;
     let backUrl = req.query.url;
     request.get({ url: 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' + this.appid + '&secret=' + this.appsecret + '&code=' + code + '&grant_type=authorization_code' },
@@ -43,22 +45,25 @@ wechatOauthJSSDk.prototype.verifiCation = function(req, res) {
                         // 第四步：根据获取的用户信息进行对应操作
                         body = JSON.parse(body)
                         body.url = backUrl;
-                        if (typeof this.oauthData == "function") this.oauthData(body, res);
+                        if (typeof this.oauthSuccess == "function") this.oauthSuccess(body, res);
+                        console.log(data.openid)
                         // 判断URL是否本身带有参数
                         backUrl += (backUrl.indexOf("?") != -1) ? "&openi=" + data.openid : "?openi=" + data.openid;
                         res.redirect(backUrl);
                     } else {
-                        console.log(response.statusCode);
+                        // if (typeof this.oauthError == "function") this.oauthError(response.statusCode, res);
+                        // console.log(response.statusCode);
                     }
                 });
             } else {
-                console.log(response.statusCode);
+                // if (typeof this.oauthError == "function") this.oauthError(response.statusCode, res);
+                // console.log(response.statusCode);
             }
         }
     );
 }
 
-wechatOauthJSSDk.prototype.JSSDK = function(req, res) {
+wechatOauthJSSDk.prototype.JSSDK = (req, res)=>{
     let url = req.headers.referer; //获取请求的URL
     if (cache.get('JSSDK' + url)) {
         res.send(cache.get('JSSDK' + url));
@@ -81,6 +86,8 @@ wechatOauthJSSDk.prototype.JSSDK = function(req, res) {
         })
     });
 }
-// 获取授权数据
-wechatOauthJSSDk.prototype.oauthData = null;
+// 获取授权成功回调
+wechatOauthJSSDk.prototype.oauthSuccess = null;
+// 获取授权失败回调
+wechatOauthJSSDk.prototype.oauthError = null;
 module.exports = wechatOauthJSSDk;
