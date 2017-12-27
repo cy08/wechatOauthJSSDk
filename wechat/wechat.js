@@ -46,18 +46,15 @@ wechatOauthJSSDk.prototype.verifiCation = function(req, res) {
                         body = JSON.parse(body)
                         body.url = backUrl;
                         if (typeof this.oauthSuccess == "function") this.oauthSuccess(body, res);
-                        console.log(data.openid)
                         // 判断URL是否本身带有参数
                         backUrl += (backUrl.indexOf("?") != -1) ? "&openi=" + data.openid : "?openi=" + data.openid;
                         res.redirect(backUrl);
                     } else {
                         if (typeof this.oauthError == "function") this.oauthError(response.statusCode, res);
-                        console.log(response.statusCode);
                     }
                 });
             } else {
                 if (typeof this.oauthError == "function") this.oauthError(response.statusCode, res);
-                console.log(response.statusCode);
             }
         }
     );
